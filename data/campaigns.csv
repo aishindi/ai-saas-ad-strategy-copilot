@@ -1,0 +1,6 @@
+campaign_id,campaign_name,platform,industry,budget,impressions,clicks,conversions,cost,roi,region,funnel_stage
+1,Q1 LinkedIn Enterprise Push,LinkedIn,SaaS,20000,500000,12000,350,18000,2.4,US,MOFU
+2,Google Search HR Tech,Google,SaaS,15000,420000,14000,410,13000,2.9,US,BOFU
+3,Meta SMB Awareness,Meta,SaaS,10000,800000,10000,180,9500,1.3,Canada,TOFU
+4,LinkedIn CTO Targeting,LinkedIn,SaaS,25000,450000,10000,500,22000,3.1,US,BOFU
+5,Twitter AI Productivity Launch,Twitter,SaaS,12000,600000,9000,150,11000,1.1,UK,TOFU

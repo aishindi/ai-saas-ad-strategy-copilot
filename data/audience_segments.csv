@@ -1,0 +1,6 @@
+segment_id,industry,company_size,role,region,historical_roi,cac
+1,SaaS,Mid-size,CTO,US,3.0,120
+2,SaaS,Enterprise,Marketing Director,US,2.5,150
+3,HR Tech,Mid-size,HR Manager,US,2.8,110
+4,AI Productivity,Startup,Founder,UK,1.9,180
+5,Project Management,SMB,Operations Manager,Canada,2.2,130

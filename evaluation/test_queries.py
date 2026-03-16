@@ -1,0 +1,22 @@
+TEST_QUERIES = [
+    "We have a $50,000 Q3 budget for a B2B SaaS launch. How should we allocate it across platforms?",
+    "Which audience segment historically produced the highest ROI?",
+    "Compare LinkedIn Ads and Google Ads performance for enterprise SaaS campaigns.",
+    "Based on past campaigns, what messaging themes worked best?",
+    "Analyze competitor ad strategies in the last 30 days.",
+    "What keywords are trending for project management SaaS tools?",
+    "Recommend targeting criteria for HR tech SaaS in the US market.",
+    "Suggest a channel mix for a new AI productivity SaaS product.",
+    "How should we adjust our strategy if conversion rates drop by 20 percent?",
+    "Identify underperforming campaigns and suggest improvements.",
+    "Which geographic regions have the best customer acquisition cost?",
+    "Recommend budget redistribution for better ROI.",
+    "Compare paid search versus social ads for SaaS lead generation.",
+    "What content angles are competitors emphasizing?",
+    "Generate a three month growth focused ad strategy.",
+    "Suggest A/B testing ideas for our landing page ads.",
+    "Based on campaign data, which funnel stage needs optimization?",
+    "What seasonal trends affect SaaS buying behavior?",
+    "Recommend messaging for targeting CTOs in mid-size companies.",
+    "Evaluate whether we should increase spend on LinkedIn next quarter."
+]
