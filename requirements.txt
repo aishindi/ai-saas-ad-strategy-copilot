@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+streamlit
+pandas
+sqlite-utils
+requests
+python-dotenv
+matplotlib
+tabulate
+cachetools
+ollama
+transformers
+torch
+accelerate
