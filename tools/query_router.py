@@ -28,13 +28,19 @@ def route_query(user_query: str):
             "data": get_underperforming_campaigns()
         }
 
-    if "geographic regions" in lower_q or "customer acquisition cost" in lower_q:
+    if "customer acquisition cost" in lower_q or "geographic regions" in lower_q or "best regions" in lower_q:
         return {
             "tool_used": "database",
             "data": get_best_regions_by_cac()
         }
 
-    if "competitor" in lower_q or "trending" in lower_q or "seasonal" in lower_q:
+    if (
+        "competitor" in lower_q
+        or "trending" in lower_q
+        or "seasonal" in lower_q
+        or "keywords" in lower_q
+        or "market trends" in lower_q
+    ):
         return {
             "tool_used": "web_search",
             "data": web_search(user_query)
