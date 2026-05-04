@@ -1,0 +1,63 @@
+{
+  "query": "We have a $50,000 Q3 budget for a B2B SaaS launch. How should we allocate it across platforms?",
+  "tool_result": {
+    "tool_used": "hybrid",
+    "data": {
+      "db_data": [
+        {
+          "industry": "SaaS",
+          "company_size": "Mid-size",
+          "role": "CTO",
+          "region": "US",
+          "historical_roi": 3.0
+        },
+        {
+          "industry": "HR Tech",
+          "company_size": "Mid-size",
+          "role": "HR Manager",
+          "region": "US",
+          "historical_roi": 2.8
+        },
+        {
+          "industry": "SaaS",
+          "company_size": "Enterprise",
+          "role": "Marketing Director",
+          "region": "US",
+          "historical_roi": 2.5
+        },
+        {
+          "industry": "Project Management",
+          "company_size": "SMB",
+          "role": "Operations Manager",
+          "region": "Canada",
+          "historical_roi": 2.2
+        },
+        {
+          "industry": "AI Productivity",
+          "company_size": "Startup",
+          "role": "Founder",
+          "region": "UK",
+          "historical_roi": 1.9
+        }
+      ],
+      "web_data": {
+        "query": "We have a $50,000 Q3 budget for a B2B SaaS launch. How should we allocate it across platforms?",
+        "results": [
+          {
+            "title": "Top SaaS Advertising Trends",
+            "snippet": "AI-driven personalization and ROI-focused messaging remain dominant trends in SaaS marketing."
+          },
+          {
+            "title": "Competitor Ad Strategy Insights",
+            "snippet": "Competitors are emphasizing productivity, automation, and cost reduction in recent campaigns."
+          }
+        ]
+      }
+    }
+  },
+  "response": {
+    "cached": false,
+    "response": "[MOCK MODEL: mistral]\nThis is a mock generated response. Prompt preview:  Review the draft answer below.  Check whether: 1. It uses the tool data correctly 2. It avoids unsupported claims 3. It gives a clear recommendation  Draft Answer: [MOCK MODEL: mistral] This is a mock generated response. Prompt preview:  You are an AI SaaS Ad Strategy Copilot. Your job is to help SaaS companies make strategic advertising decisions.  Rules: 1. Use the provided tool context. 2. Do not invent campaign metrics not present in the tool data. 3. Give concise but data-driven recommendations. 4. When possible, include:    - budget allocation advice    - target audience suggestions    - platform recommendations    - risks and next steps   You are solving a strategic ad planning task. Think like a marketing strategist, not just a text generator.  User Query: We have a $50,000 Q3 bud...",
+    "response_time_sec": 0.0
+  }
+}

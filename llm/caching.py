@@ -1,6 +1,7 @@
 from cachetools import TTLCache
 
-prompt_cache = TTLCache(maxsize=100, ttl=300)
+# Cache LLM responses for 10 minutes
+prompt_cache = TTLCache(maxsize=200, ttl=600)
 
 
 def get_cached_response(key):
@@ -9,3 +10,7 @@ def get_cached_response(key):
 
 def set_cached_response(key, value):
     prompt_cache[key] = value
+
+
+def clear_cache():
+    prompt_cache.clear()
