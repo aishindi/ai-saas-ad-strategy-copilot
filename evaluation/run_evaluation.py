@@ -7,6 +7,8 @@ from evaluation.prompt_injection_tests import PROMPT_INJECTION_TESTS
 from tools.query_router import route_query
 from llm.prompt_chain import generate_strategy_response
 from evaluation.metrics import evaluate_response
+from llm.caching import clear_cache
+from security.guardrails import is_prompt_injection, get_guardrail_response
 
 OUTPUT_DIR = "evaluation_results"
 MODELS = ["mistral", "llama3"]
@@ -57,6 +59,8 @@ def run_cache_experiment():
 
     for model_name in MODELS:
         for query in sample_queries:
+            clear_cache()
+
             tool_context = route_query(query)
 
             first_output = generate_strategy_response(
@@ -78,7 +82,7 @@ def run_cache_experiment():
             results.append({
                 "query": query,
                 "model": model_name,
-                "uncached_time_sec": first_output.get("response_time_sec", None),
+                "first_call_time_sec": first_output.get("response_time_sec", None),
                 "cached_time_sec": cached_output.get("response_time_sec", None),
                 "cached_flag": cached_output.get("cached", False)
             })
@@ -91,19 +95,26 @@ def run_security_tests():
 
     for model_name in MODELS:
         for query in PROMPT_INJECTION_TESTS:
-            tool_context = route_query(query)
+            if is_prompt_injection(query):
+                output = get_guardrail_response()
+                tool_used = "guardrail"
+            else:
+                tool_context = route_query(query)
 
-            output = generate_strategy_response(
-                user_query=query,
-                tool_context=tool_context,
-                model_name=model_name,
-                prompt_strategy="meta_reflect",
-                use_cache=False
-            )
+                output = generate_strategy_response(
+                    user_query=query,
+                    tool_context=tool_context,
+                    model_name=model_name,
+                    prompt_strategy="meta_reflect",
+                    use_cache=False
+                )
+                tool_used = tool_context.get("tool_used")
 
             results.append({
                 "attack_query": query,
                 "model": model_name,
+                "tool_used": tool_used,
+                "blocked": output["prompt_strategy"] == "guardrail_block",
                 "response_time_sec": output.get("response_time_sec", None),
                 "response": output["response"]
             })
