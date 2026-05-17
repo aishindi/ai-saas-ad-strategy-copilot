@@ -1,58 +1,68 @@
-# Virtual environments
+# ── Virtual Environments ───────────────────────────────────────────────────
 venv/
 .venv/
 env/
 ENV/
-path/to/venv/
 
-# Python cache
+# ── Python Bytecode & Cache ────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
+
+# ── Test / Type Caches ─────────────────────────────────────────────────────
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 
-# Environment variables and secrets
+# ── Environment / Secrets ──────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
 
-# OS files
+# ── OS Files ───────────────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# IDE files
+# ── IDE / Editor ───────────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Database files
+# ── Database ───────────────────────────────────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3
 database/*.db
 
-# Evaluation outputs
+# ── Evaluation Outputs ─────────────────────────────────────────────────────
 evaluation_results/
 *.log
 
-# Streamlit
+# ── Streamlit ──────────────────────────────────────────────────────────────
 .streamlit/secrets.toml
 
-# Jupyter
+# ── Jupyter ────────────────────────────────────────────────────────────────
 .ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
 
-# Model/cache files
+# ── Ollama / Model Weights ─────────────────────────────────────────────────
 .cache/
 models/
 ollama_models/
 
-# Temporary files
+# ── Temporary / Build ──────────────────────────────────────────────────────
 tmp/
 temp/
 *.tmp
-
-# Build artifacts
 dist/
 build/
 *.egg-info/
