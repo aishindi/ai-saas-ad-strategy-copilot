@@ -1,4 +1,5 @@
 import os
+import copy
 import time
 from cachetools import TTLCache
 from fastapi import FastAPI
@@ -82,9 +83,10 @@ def ask_bot(request: QueryRequest):
 
     cache_key = build_api_cache_key(request)
 
-    # Serve cached full response before routing/tools/LLM
+    # FIX 1: Serve cached response with deep copy so mutations don't corrupt stored payload
     if request.use_cache and cache_key in api_cache:
-        cached_payload = api_cache[cache_key]
+        cached_payload = copy.deepcopy(api_cache[cache_key])
+        # Correctly mark as cache hit
         cached_payload["response"]["cached"] = True
         cached_payload["response"]["response_time_sec"] = 0.0
         return cached_payload
@@ -127,7 +129,9 @@ def ask_bot(request: QueryRequest):
         use_cache=request.use_cache
     )
 
-    response["cached"] = False
+    # FIX 2: Preserve cached=True if LLM-level cache hit it; only set False when fresh
+    if not response.get("cached"):
+        response["cached"] = False
     response["response_time_sec"] = round(time.time() - start, 3)
 
     payload = {
@@ -138,7 +142,8 @@ def ask_bot(request: QueryRequest):
         "response": response
     }
 
+    # FIX 3: Store deep copy so later mutations to `payload` don't corrupt cache
     if request.use_cache:
-        api_cache[cache_key] = payload
+        api_cache[cache_key] = copy.deepcopy(payload)
 
     return payload

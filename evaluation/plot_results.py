@@ -17,7 +17,9 @@ def load_latest_file(pattern):
         print(f"No files found for pattern: {pattern}")
         return None
 
-    latest_file = max(files, key=os.path.getctime)
+    # FIX: use getmtime instead of getctime (getctime is creation time on
+    # Windows but inode-change time on Linux, not reliable for "latest")
+    latest_file = max(files, key=os.path.getmtime)
 
     with open(latest_file, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -48,6 +50,10 @@ def plot_model_latency(standard_results):
     models = list(model_times.keys())
     avg_times = [safe_average(model_times[m]) for m in models]
 
+    if not models:
+        print("No model latency data found.")
+        return
+
     plt.figure(figsize=(8, 5))
     plt.bar(models, avg_times)
     plt.title("Average Response Time by Model")
@@ -56,6 +62,7 @@ def plot_model_latency(standard_results):
     plt.tight_layout()
     plt.savefig(os.path.join(PLOT_DIR, "model_latency.png"))
     plt.close()
+    print("Saved model_latency.png")
 
 
 def plot_prompt_strategy_scores(standard_results):
@@ -74,6 +81,10 @@ def plot_prompt_strategy_scores(standard_results):
     strategies = list(strategy_scores.keys())
     avg_scores = [safe_average(strategy_scores[s]) for s in strategies]
 
+    if not strategies:
+        print("No prompt strategy score data found.")
+        return
+
     plt.figure(figsize=(8, 5))
     plt.bar(strategies, avg_scores)
     plt.title("Average Evaluation Score by Prompt Strategy")
@@ -82,6 +93,7 @@ def plot_prompt_strategy_scores(standard_results):
     plt.tight_layout()
     plt.savefig(os.path.join(PLOT_DIR, "prompt_strategy_scores.png"))
     plt.close()
+    print("Saved prompt_strategy_scores.png")
 
 
 def plot_cache_comparison(cache_results):
@@ -90,16 +102,15 @@ def plot_cache_comparison(cache_results):
     for item in cache_results:
         model = item.get("model")
 
-        # New field name after fixing cache experiment
+        # Support both field name variants
         first_call_time = item.get("first_call_time_sec")
-
-        # Backward compatibility with older result files
         if first_call_time is None:
             first_call_time = item.get("uncached_time_sec")
 
         cached_time = item.get("cached_time_sec")
 
         if model is None or first_call_time is None or cached_time is None:
+            print(f"Skipping cache result with missing fields: {item}")
             continue
 
         aggregated.setdefault(model, {"first_call": [], "cached": []})
@@ -110,15 +121,11 @@ def plot_cache_comparison(cache_results):
 
     if not models:
         print("No valid cache results found for plotting.")
+        print("Hint: make sure run_cache_only.py completed and saved a cache_results_*.json file.")
         return
 
-    first_call_times = [
-        safe_average(aggregated[m]["first_call"]) for m in models
-    ]
-
-    cached_times = [
-        safe_average(aggregated[m]["cached"]) for m in models
-    ]
+    first_call_times = [safe_average(aggregated[m]["first_call"]) for m in models]
+    cached_times = [safe_average(aggregated[m]["cached"]) for m in models]
 
     x = range(len(models))
     width = 0.35
@@ -145,6 +152,7 @@ def plot_cache_comparison(cache_results):
     plt.tight_layout()
     plt.savefig(os.path.join(PLOT_DIR, "cache_comparison.png"))
     plt.close()
+    print("Saved cache_comparison.png")
 
 
 if __name__ == "__main__":
@@ -156,8 +164,13 @@ if __name__ == "__main__":
     if standard_results:
         plot_model_latency(standard_results)
         plot_prompt_strategy_scores(standard_results)
+    else:
+        print("No standard_results_*.json found — skipping model latency and score plots.")
 
     if cache_results:
         plot_cache_comparison(cache_results)
+    else:
+        print("No cache_results_*.json found — skipping cache comparison plot.")
+        print("Run: python -m evaluation.run_cache_only  first.")
 
-    print(f"Plots saved in {PLOT_DIR}")
+    print(f"Done. Plots saved in {PLOT_DIR}")
