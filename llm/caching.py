@@ -1,6 +1,5 @@
 from cachetools import TTLCache
 
-# Cache LLM responses for 10 minutes
 prompt_cache = TTLCache(maxsize=200, ttl=600)
 
 
