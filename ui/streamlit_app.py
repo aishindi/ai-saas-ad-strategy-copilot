@@ -20,10 +20,27 @@ st.markdown(f"""
 
 /* Reset */
 *, *::before, *::after {{ box-sizing: border-box; }}
-header[data-testid="stHeader"],
-#MainMenu, footer, .stDeployButton,
-button[title="View fullscreen"],
 
+/* Hide ALL Streamlit chrome — header, toolbar, deploy menu, fullscreen, collapse */
+header[data-testid="stHeader"],
+#MainMenu,
+footer,
+.stDeployButton,
+button[title="View fullscreen"],
+[data-testid="collapsedControl"],
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+.stAppDeployButton,
+iframe[title="streamlit_analytics"],
+div[data-testid="stToolbarActions"],
+div[class*="StatusWidget"],
+div[class*="toolbar"] {{ display: none !important; }}
+
+/* Kill the white bar Streamlit renders above the app content */
+.stApp > div:first-child > div:first-child:not([data-testid="stSidebar"]):not(.block-container) {{
+    display: none !important;
+}}
 
 html, body, [class*="css"] {{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -40,7 +57,7 @@ html, body, [class*="css"] {{
 }}
 
 /* Top-bar clearance */
-.stApp > div {{ padding-top: 58px; }}
+.stApp > div {{ padding-top: 28px; }}
 
 .block-container {{
     padding-top: 1.25rem !important;
@@ -115,22 +132,36 @@ html, body, [class*="css"] {{
     white-space: nowrap;
 }}
 
-/* ── Sidebar — no collapse handle ── */
+/* ── Sidebar ── */
 section[data-testid="stSidebar"] {{
     background: #ffffff !important;
     border-right: 1px solid #eaecf0 !important;
     box-shadow: none !important;
-    padding-top: 58px !important;
+    top: 58px !important;
+    height: calc(100vh - 58px) !important;
+    position: fixed !important;
 }}
 
+/* Kill Streamlit's own inner wrapper top spacing — this is the pink gap source */
 section[data-testid="stSidebar"] > div:first-child {{
-    padding-top: 1.4rem;
-    padding-bottom: 1.4rem;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    padding-bottom: 1.4rem !important;
+    overflow-y: auto !important;
+    height: 100% !important;
 }}
 
+/* The actual scrollable content block inside sidebar */
+section[data-testid="stSidebar"] > div > div:first-child {{
+    padding-top: 1.1rem !important;
+    margin-top: 0 !important;
+}}
 
+/* Hide only the collapse/expand toggle buttons — sidebar stays permanently visible */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] {{ display: none !important; }}
 
-/* Sidebar typography */
+/* Sidebar section labels */
 .sb-label {{
     font-size: 0.67rem;
     font-weight: 700;
@@ -141,6 +172,9 @@ section[data-testid="stSidebar"] > div:first-child {{
     margin-bottom: 0.45rem;
 }}
 
+/* Hide native Streamlit widget labels — we render our own .sb-label above each */
+section[data-testid="stSidebar"] .stSelectbox label,
+section[data-testid="stSidebar"] .stTextInput label {{ display: none !important; }}
 
 section[data-testid="stSidebar"] .stSelectbox > div > div {{
     background: #f9fafb !important;
@@ -298,15 +332,12 @@ div[data-testid="stChatMessage"] code {{
     border-radius: 4px; padding: 1px 5px; font-size: 0.85em;
 }}
 
-/* ── Chat input — clean, full-width, no grey box ── */
-/*
-  Target the outer bottom container Streamlit uses.
-  left = sidebar width (245px default), right = 0 → spans chat column exactly.
-  We kill ALL inherited backgrounds/borders then style just the inner pill.
-*/
+/* ── Chat input — fully uniform white, no grey anywhere ── */
+/* Kill every wrapper layer Streamlit nests */
 div[data-testid="stBottom"],
 div[data-testid="stBottom"] > div,
-div[data-testid="stBottom"] > div > div {{
+div[data-testid="stBottom"] > div > div,
+div[data-testid="stBottom"] > div > div > div {{
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -316,7 +347,7 @@ div[data-testid="stBottom"] > div > div {{
 div[data-testid="stBottom"] {{
     position: fixed !important;
     bottom: 0 !important;
-    left: 245px !important;
+    left: 305px !important;
     right: 0 !important;
     width: auto !important;
     padding: 12px 32px 20px !important;
@@ -329,23 +360,26 @@ div[data-testid="stBottom"] {{
     z-index: 900 !important;
 }}
 
-/* The actual input pill */
+/* The actual input pill — pure white, uniform */
 div[data-testid="stChatInput"] {{
     background: #ffffff !important;
     border: 1px solid #d1d5db !important;
     border-radius: 12px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06) !important;
-    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.05) !important;
+    overflow: hidden !important;
 }}
 
-div[data-testid="stChatInput"] > div {{
-    background: transparent !important;
+/* Every child div of the input must also be white */
+div[data-testid="stChatInput"] > div,
+div[data-testid="stChatInput"] > div > div,
+div[data-testid="stChatInput"] > div > div > div {{
+    background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
 }}
 
 div[data-testid="stChatInput"] textarea {{
-    background: transparent !important;
+    background: #ffffff !important;
     color: #111827 !important;
     caret-color: #6366f1 !important;
     font-size: 0.92rem !important;
@@ -363,22 +397,37 @@ div[data-testid="stChatInput"] textarea::placeholder {{
     font-weight: 400 !important;
 }}
 
+/* Submit button — soft grey, looks like a gentle send icon not a CTA */
 div[data-testid="stChatInput"] button[data-testid="stChatInputSubmitButton"] {{
-    background: #111827 !important;
-    border: none !important;
+    background: #e5e7eb !important;
+    border: 1px solid #d1d5db !important;
     border-radius: 8px !important;
     margin: 6px 8px 6px 0 !important;
     box-shadow: none !important;
-    transition: background .15s ease !important;
+    transition: background .15s ease, border-color .15s ease !important;
+    opacity: 0.75;
+}}
+
+div[data-testid="stChatInput"] button[data-testid="stChatInputSubmitButton"] svg {{
+    color: #9ca3af !important;
+    fill: #9ca3af !important;
 }}
 
 div[data-testid="stChatInput"] button[data-testid="stChatInputSubmitButton"]:hover {{
-    background: #1f2937 !important;
+    background: #d1d5db !important;
+    border-color: #9ca3af !important;
+    opacity: 1;
+}}
+
+/* When input has content, make button slightly more visible */
+div[data-testid="stChatInput"]:focus-within button[data-testid="stChatInputSubmitButton"] {{
+    background: #e5e7eb !important;
+    opacity: 0.9;
 }}
 
 div[data-testid="stChatInput"]:focus-within {{
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 1px 4px rgba(0,0,0,0.06) !important;
+    border-color: #a5b4fc !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.05) !important;
 }}
 
 /* Spinner */
@@ -395,7 +444,6 @@ div[data-testid="stChatInput"]:focus-within {{
     <span class="ac-name">AdCopilot</span>
     <div class="ac-sep"></div>
     <span class="ac-sub">AI SaaS Ad Strategy &nbsp;·&nbsp; Budget allocation &nbsp;·&nbsp; Audience targeting &nbsp;·&nbsp; Campaign performance</span>
-    <span class="ac-pill">Beta</span>
 </div>
 """, unsafe_allow_html=True)
 
