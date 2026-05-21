@@ -1,7 +1,7 @@
-import json
 import glob
+import json
 import os
-import pandas as pd
+from statistics import mean
 
 OUTPUT_DIR = "evaluation_results"
 
@@ -10,56 +10,55 @@ def latest_file(pattern):
     files = glob.glob(os.path.join(OUTPUT_DIR, pattern))
     if not files:
         raise FileNotFoundError(f"No files found for {pattern}")
-    return max(files, key=os.path.getctime)
+    return max(files, key=os.path.getmtime)
 
 
-standard_file = latest_file("standard_results_*.json")
+def summarize():
+    standard_file = latest_file("standard_results_*.json")
 
-with open(standard_file, "r", encoding="utf-8") as f:
-    data = json.load(f)
+    with open(standard_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
 
-rows = []
+    print(f"Loaded: {standard_file}")
 
-for item in data:
-    rows.append({
-        "model": item["model"],
-        "prompt_strategy": item["prompt_strategy"],
-        "response_time_sec": item["response_time_sec"],
-        "total_score": item["metrics"]["total_score"],
-        "accuracy_percent": round((item["metrics"]["total_score"] / 6) * 100, 2),
-    })
+    models = sorted(set(item["model"] for item in data))
+    strategies = sorted(set(item["prompt_strategy"] for item in data))
 
-df = pd.DataFrame(rows)
+    print("\nModel Summary")
+    print("model | avg_score | accuracy_percent | pass_rate_percent | avg_latency_sec | runs")
+    for model in models:
+        rows = [item for item in data if item["model"] == model]
+        avg_score = mean(item["metrics"]["total_score"] for item in rows)
+        accuracy = mean(item["metrics"]["accuracy_percent"] for item in rows)
+        pass_rate = mean(1 if item["metrics"]["passed"] else 0 for item in rows) * 100
+        latency_rows = [item["response_time_sec"] for item in rows if item.get("response_time_sec") is not None]
+        avg_latency = mean(latency_rows) if latency_rows else 0
+        print(f"{model} | {avg_score:.2f} | {accuracy:.2f}% | {pass_rate:.2f}% | {avg_latency:.2f} | {len(rows)}")
 
-model_summary = df.groupby("model").agg(
-    avg_score=("total_score", "mean"),
-    accuracy_percent=("accuracy_percent", "mean"),
-    avg_latency=("response_time_sec", "mean")
-).reset_index()
+    print("\nPrompt Strategy Summary")
+    print("strategy | avg_score | accuracy_percent | pass_rate_percent | runs")
+    for strategy in strategies:
+        rows = [item for item in data if item["prompt_strategy"] == strategy]
+        avg_score = mean(item["metrics"]["total_score"] for item in rows)
+        accuracy = mean(item["metrics"]["accuracy_percent"] for item in rows)
+        pass_rate = mean(1 if item["metrics"]["passed"] else 0 for item in rows) * 100
+        print(f"{strategy} | {avg_score:.2f} | {accuracy:.2f}% | {pass_rate:.2f}% | {len(rows)}")
 
-strategy_summary = df.groupby("prompt_strategy").agg(
-    avg_score=("total_score", "mean"),
-    accuracy_percent=("accuracy_percent", "mean"),
-    avg_latency=("response_time_sec", "mean")
-).reset_index()
+    print("\nModel + Strategy Summary")
+    print("model | strategy | avg_score | accuracy_percent | pass_rate_percent | runs")
+    for model in models:
+        for strategy in strategies:
+            rows = [
+                item for item in data
+                if item["model"] == model and item["prompt_strategy"] == strategy
+            ]
+            if not rows:
+                continue
+            avg_score = mean(item["metrics"]["total_score"] for item in rows)
+            accuracy = mean(item["metrics"]["accuracy_percent"] for item in rows)
+            pass_rate = mean(1 if item["metrics"]["passed"] else 0 for item in rows) * 100
+            print(f"{model} | {strategy} | {avg_score:.2f} | {accuracy:.2f}% | {pass_rate:.2f}% | {len(rows)}")
 
-model_strategy_summary = df.groupby(["model", "prompt_strategy"]).agg(
-    avg_score=("total_score", "mean"),
-    accuracy_percent=("accuracy_percent", "mean"),
-    avg_latency=("response_time_sec", "mean")
-).reset_index()
 
-print("\nModel Summary")
-print(model_summary)
-
-print("\nPrompt Strategy Summary")
-print(strategy_summary)
-
-print("\nModel + Strategy Summary")
-print(model_strategy_summary)
-
-model_summary.to_csv(os.path.join(OUTPUT_DIR, "model_summary.csv"), index=False)
-strategy_summary.to_csv(os.path.join(OUTPUT_DIR, "strategy_summary.csv"), index=False)
-model_strategy_summary.to_csv(os.path.join(OUTPUT_DIR, "model_strategy_summary.csv"), index=False)
-
-print("\nSaved CSV summaries in evaluation_results/")
+if __name__ == "__main__":
+    summarize()
