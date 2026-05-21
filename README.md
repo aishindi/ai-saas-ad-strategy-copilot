@@ -141,7 +141,7 @@ WEB_SEARCH_MODE=mock
 TAVILY_API_KEY=
 ```
 
-For live web search set `WEB_SEARCH_MODE=tavily` and add your Tavily key. Never commit `.env`.
+For live web search set `WEB_SEARCH_MODE=tavily` and add your Tavily key available at https://app.tavily.com/. Never commit `.env`.
 
 ### 6. Seed the database
 
@@ -171,155 +171,91 @@ streamlit run ui/streamlit_app.py
 
 The evaluation scripts run entirely against Ollama (local LLMs). On Colab you need to start Ollama inside the notebook session. Follow these steps exactly.
 
-### Step 1 — Install system dependencies
+### Step 1 — Clone repo and install Python dependencies
 
 ```python
 # Cell 1
-import subprocess, sys
-
-# Install Ollama
-subprocess.run("curl -fsSL https://ollama.com/install.sh | sh", shell=True, check=True)
-
-# Start Ollama server in the background
-import threading, time
-
-def start_ollama():
-    subprocess.run(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-t = threading.Thread(target=start_ollama, daemon=True)
-t.start()
-time.sleep(5)   # give it time to start
-
-# Pull both models (this takes a few minutes the first time)
-subprocess.run(["ollama", "pull", "mistral"], check=True)
-subprocess.run(["ollama", "pull", "llama3"],  check=True)
-
-print("Ollama ready")
+!git clone https://github.com/aishindi/ai-saas-ad-strategy-copilot.git
+%cd ai-saas-ad-strategy-copilot
+!pip install -q -r requirements.txt
 ```
 
-### Step 2 — Clone repo and install Python dependencies
+### Step 2 — Install Ollama and pull models
 
 ```python
 # Cell 2
-!git clone https://github.com/YOUR_USERNAME/ai-saas-ad-strategy-copilot.git
-%cd ai-saas-ad-strategy-copilot
-!pip install -r requirements.txt -q
+!apt-get update -qq
+!apt-get install -y zstd
+
+!curl -fsSL https://ollama.com/install.sh | sh
+
+import subprocess, time
+
+ollama_process = subprocess.Popen(
+    ["ollama", "serve"],
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.DEVNULL
+)
+
+time.sleep(8)
+print("Ollama server started")
+
+!ollama pull mistral
+!ollama pull llama3
+!ollama list
 ```
 
-### Step 3 — Seed the database
+### Step 3 — Set environment variables
 
 ```python
 # Cell 3
-!python database/seed_data.py
+import os
+
+os.environ["MODEL_MODE"] = "ollama"
+os.environ["MODEL_SMALL"] = "mistral"
+os.environ["MODEL_LARGE"] = "llama3"
+os.environ["WEB_SEARCH_MODE"] = "mock"
 ```
 
-### Step 4 — Run full evaluation (all queries × all models × all strategies)
-
-This runs all 20 test queries against both models (mistral, llama3) and all three prompt strategies (baseline, meta, meta_reflect), then runs the cache experiment and security tests.
+### Step 4 — Seed database
 
 ```python
 # Cell 4
-import os, sys
-sys.path.insert(0, ".")
-os.environ["WEB_SEARCH_MODE"] = "mock"   # no Tavily key needed
-
-from evaluation.run_evaluation import (
-    ensure_output_dir,
-    run_standard_tests,
-    run_cache_experiment,
-    run_security_tests,
-    save_json
-)
-from datetime import datetime
-
-ensure_output_dir()
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-print("=" * 60)
-print("Running standard evaluation")
-print("  Models:     mistral, llama3")
-print("  Strategies: baseline, meta, meta_reflect")
-print(f"  Queries:    20  →  total runs: {2 * 3 * 20} = 120")
-print("=" * 60)
-
-standard_results = run_standard_tests()
-save_json(f"standard_results_{timestamp}.json", standard_results)
-print(f"  ✓ Saved standard_results_{timestamp}.json  ({len(standard_results)} rows)")
-
-print("\nRunning cache experiment (5 queries × 2 models) ...")
-cache_results = run_cache_experiment()
-save_json(f"cache_results_{timestamp}.json", cache_results)
-print(f"  ✓ Saved cache_results_{timestamp}.json  ({len(cache_results)} rows)")
-
-print("\nRunning security / prompt injection tests ...")
-security_results = run_security_tests()
-save_json(f"security_results_{timestamp}.json", security_results)
-print(f"  ✓ Saved security_results_{timestamp}.json  ({len(security_results)} rows)")
-
-print("\nAll evaluation complete.")
+!python database/seed_data.py
 ```
 
-### Step 5 — Print a summary table
+### Step 5 — Run evaluation scripts
 
 ```python
 # Cell 5
-from evaluation.summarize_results import summarize
-summarize()
+!python -m evaluation.run_evaluation
 ```
 
-### Step 6 — Generate and display all plots
+### Step 6 — Generate plots
 
 ```python
 # Cell 6
-import matplotlib
-matplotlib.use("Agg")   # non-interactive backend for Colab
-
-from evaluation.plot_results import (
-    ensure_plot_dir,
-    load_latest_file,
-    plot_model_latency,
-    plot_prompt_strategy_scores,
-    plot_cache_comparison
-)
-from IPython.display import Image, display
-
-ensure_plot_dir()
-
-standard = load_latest_file("standard_results_*.json")
-cache     = load_latest_file("cache_results_*.json")
-
-if standard:
-    plot_model_latency(standard)
-    plot_prompt_strategy_scores(standard)
-
-if cache:
-    plot_cache_comparison(cache)
-
-# Display inline
-for img_path in [
-    "evaluation_results/plots/model_latency.png",
-    "evaluation_results/plots/prompt_strategy_scores.png",
-    "evaluation_results/plots/cache_comparison.png",
-]:
-    if os.path.exists(img_path):
-        print(f"\n── {img_path}")
-        display(Image(img_path))
-    else:
-        print(f"  ⚠ Not found: {img_path}")
+!python evaluation/plot_results.py
 ```
 
-### Step 7 — Download results (optional)
+### Step 7 - Show plots
 
 ```python
 # Cell 7
-from google.colab import files
-import glob
+from IPython.display import Image, display
+import os
 
-for f in glob.glob("evaluation_results/*.json"):
-    files.download(f)
+plot_paths = [
+    "evaluation_results/plots/model_latency.png",
+    "evaluation_results/plots/prompt_strategy_scores.png",
+    "evaluation_results/plots/cache_comparison.png",
+]
 
-for f in glob.glob("evaluation_results/plots/*.png"):
-    files.download(f)
+for path in plot_paths:
+    if os.path.exists(path):
+        display(Image(path))
+    else:
+        print("Missing:", path)
 ```
 
 ### Expected output summary
